@@ -7,17 +7,19 @@ import type { Product } from "@/data/products";
 import { products } from "@/data/products";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 
+type ProfilePageProps = {
+  searchParams?: Promise<{ section?: string }>;
+};
+
 export const metadata: Metadata = {
   title: "پروفایل خریدار | بازار نو",
   description:
     "مدیریت اطلاعات حساب، مشاهده سفارش های اخیر و دسترسی سریع به پیشنهادهای بازار نو برای کاربران عضو.",
 };
 
-export default async function ProfilePage({
-  searchParams,
-}: {
-  searchParams?: { section?: string };
-}) {
+export default async function ProfilePage({ searchParams }: ProfilePageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
   const supabase = await getSupabaseServerClient();
   const {
     data: { user },
@@ -54,7 +56,8 @@ export default async function ProfilePage({
   const address = profile?.address ?? user.user_metadata?.address ?? "";
   const notes = profile?.notes ?? user.user_metadata?.bio ?? "";
 
-  const activeSection = searchParams?.section === "orders" ? "orders" : "profile";
+  const activeSection =
+    resolvedSearchParams?.section === "orders" ? "orders" : "profile";
 
   const recommendedProducts = getRecommendedProducts(products, 4);
 
