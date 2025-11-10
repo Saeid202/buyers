@@ -74,7 +74,7 @@ export default function Home() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]">
             <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 transition hover:border-neutral-900">
               <div className="relative h-48 w-full overflow-hidden">
-                <Image
+        <Image
                   src={
                     spotlightProduct?.images[0]?.url ??
                     "https://images.unsplash.com/photo-1580894908361-967195033215?auto=format&fit=crop&w=1200&q=80"
