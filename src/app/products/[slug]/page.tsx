@@ -13,8 +13,8 @@ import { FeatureList } from "@/components/product/FeatureList";
 import { SpecList } from "@/components/product/SpecList";
 import { Badge } from "@/components/common/Badge";
 
-type PageProps = {
-  params: { slug: string };
+type ProductPageProps = {
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateStaticParams() {
@@ -23,8 +23,9 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: PageProps): Promise<Metadata> {
-  const product = getProductBySlug(params.slug);
+}: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -43,8 +44,11 @@ export async function generateMetadata({
   };
 }
 
-export default function ProductPage({ params }: PageProps) {
-  const product = getProductBySlug(params.slug);
+export default async function ProductPage({
+  params,
+}: ProductPageProps) {
+  const { slug } = await params;
+  const product = getProductBySlug(slug);
 
   if (!product) {
     notFound();
