@@ -28,7 +28,7 @@ export function PriceTag({
   className = "",
 }: PriceTagProps) {
   return (
-    <span className={`${sizeMap[size]} ${weightMap[weight]} text-neutral-900 ${className}`}>
+    <span className={`${sizeMap[size]} ${weightMap[weight]} text-primary ${className}`}>
       {formatPrice(value, currencyLabel)}
     </span>
   );

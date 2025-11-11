@@ -1,0 +1,19 @@
+.step-line {
+    border-top: 1px dashed var(--color-secondary);
+    width: 100%;
+}
+.step span {
+    position: absolute;
+    width: max-content;
+    right: -15px;
+    bottom: -26px;
+    left: 0;
+}
+
+.step:last-child span{
+    right: -35px;
+}
+
+.step:first-child span{
+    right: -5px;
+}
