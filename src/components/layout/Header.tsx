@@ -3,16 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Search, Menu, User, LogOut } from "lucide-react";
+import { ShoppingBag, Search, User, LogOut } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseAuth } from "@/providers/SupabaseAuthProvider";
 
 const navItems = [
   { href: "/#categories", label: "دسته بندی کالاها" },
-  { href: "/#new-products", label: "جدیدترین" },
-  { href: "/#featured", label: "پیشنهاد ویژه" },
-  { href: "/#smart-home", label: "خانه هوشمند" },
-  { href: "/#wearables", label: "گجت پوشیدنی" },
   { href: "/checkout", label: "ثبت سفارش" },
 ];
 
@@ -152,14 +148,6 @@ export function Header() {
 
 
           <div className="flex w-full items-center gap-3 pt-2">
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-xl border.border-white/70 bg-white/70 px-3 py-2 text-sm font-semibold text-neutral-700 shadow-sm.transition hover:border-neutral-900 hover:text-neutral-900"
-            >
-              <Menu className="size-4" aria-hidden />
-              <span>همه دسته بندی ها</span>
-            </button>
-
             <div className="hidden flex-1 items-center gap-4 overflow-x-auto text-sm text-neutral-600 lg:flex">
               {navItems.map((item) => (
                 <Link

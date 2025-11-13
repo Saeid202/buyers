@@ -57,9 +57,13 @@ export function CartPageClient() {
                   key={item.id}
                   className="flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center"
                 >
-                  <div className="relative h-28 w-full overflow-hidden rounded-2xl bg-neutral-100 sm:h-24 sm:w-24">
+                  <Link
+                    href={`/products/${item.slug}`}
+                    className="relative block h-28 w-full overflow-hidden rounded-2xl bg-neutral-100 transition hover:ring-2 hover:ring-neutral-900/40 sm:h-24 sm:w-24"
+                    aria-label={`نمایش جزئیات ${item.name}`}
+                  >
                     <Image src={item.image} alt={item.name} fill className="object-cover" />
-                  </div>
+                  </Link>
                   <div className="flex flex-1 flex-col gap-2 text-sm text-neutral-700">
                     <span className="font-semibold text-neutral-900">{item.name}</span>
                     <span className="text-neutral-500">

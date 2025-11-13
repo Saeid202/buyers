@@ -8,7 +8,14 @@ import { products } from "@/data/products";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 
 type ProfilePageProps = {
-  searchParams?: Promise<{ section?: string }>;
+  searchParams?: { section?: string };
+};
+
+type ResolvedUser = {
+  id: string;
+  email: string | null;
+  created_at: string | null;
+  user_metadata?: Record<string, unknown>;
 };
 
 export const metadata: Metadata = {
@@ -18,27 +25,90 @@ export const metadata: Metadata = {
 };
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const resolvedSearchParams = searchParams;
 
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseConfigured =
+    Boolean(supabaseUrl && supabaseAnonKey) &&
+    !/example\.supabase\.co/i.test(supabaseUrl);
 
-  if (!user) {
-    redirect("/login");
+  let user: ResolvedUser | null = null;
+  let profile:
+    | {
+        first_name?: string | null;
+        last_name?: string | null;
+        company_name?: string | null;
+        company_site?: string | null;
+        address?: string | null;
+        notes?: string | null;
+      }
+    | null = null;
+  let profileLoadError: string | null = null;
+
+  if (supabaseConfigured) {
+    try {
+      const supabase = await getSupabaseServerClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error) {
+        profileLoadError = error.message;
+      }
+
+      if (data?.user) {
+        user = {
+          id: data.user.id,
+          email: data.user.email,
+          created_at: data.user.created_at,
+          user_metadata: data.user.user_metadata,
+        };
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("user_profiles")
+          .select(
+            "first_name, last_name, company_name, company_site, address, notes",
+          )
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          profileLoadError = profileError.message;
+        } else {
+          profile = profileData;
+        }
+      } else {
+        redirect("/login");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "خطای نامشخص در Supabase";
+      profileLoadError = message;
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Failed to load profile from Supabase:", error);
+      }
+    }
   }
 
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select(
-      "first_name, last_name, company_name, company_site, address, notes",
-    )
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const isDemoMode = !supabaseConfigured || !user;
 
-  const firstName = profile?.first_name ?? user.user_metadata?.first_name ?? "";
-  const lastName = profile?.last_name ?? user.user_metadata?.last_name ?? "";
+  if (!user) {
+    user = {
+      id: "demo-user",
+      email: "demo@bazaarno.ir",
+      created_at: "2024-01-01T00:00:00.000Z",
+      user_metadata: {
+        first_name: "کاربر",
+        last_name: "نمونه",
+        company_name: "بازار نو",
+        company_site: "https://bazaarno.example",
+      },
+    };
+  }
+
+  const firstName =
+    profile?.first_name ?? (user.user_metadata?.first_name as string) ?? "";
+  const lastName =
+    profile?.last_name ?? (user.user_metadata?.last_name as string) ?? "";
   const displayName =
     `${firstName} ${lastName}`.trim() || (user.email?.split("@")[0] ?? "کاربر بازار نو");
 
@@ -51,10 +121,17 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       })
     : "نامشخص";
 
-  const companyName = profile?.company_name ?? user.user_metadata?.company_name ?? "";
-  const companySite = profile?.company_site ?? user.user_metadata?.company_site ?? "";
-  const address = profile?.address ?? user.user_metadata?.address ?? "";
-  const notes = profile?.notes ?? user.user_metadata?.bio ?? "";
+  const companyName =
+    profile?.company_name ??
+    (user.user_metadata?.company_name as string) ??
+    "";
+  const companySite =
+    profile?.company_site ??
+    (user.user_metadata?.company_site as string) ??
+    "";
+  const address =
+    profile?.address ?? (user.user_metadata?.address as string) ?? "";
+  const notes = profile?.notes ?? (user.user_metadata?.bio as string) ?? "";
 
   const activeSection =
     resolvedSearchParams?.section === "orders" ? "orders" : "profile";
@@ -113,6 +190,21 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <p>برای استفاده از خدمات ویژه باشگاه مشتریان ادامه دهید.</p>
           </div>
         </header>
+
+        {isDemoMode && (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm leading-7 text-amber-700 shadow-sm">
+            برای مشاهده کامل اطلاعات پروفایل، مقادیر واقعی Supabase را در فایل
+            <code className="mx-1 rounded bg-white px-2 py-1 text-xs text-amber-800">
+              .env.local
+            </code>
+            تنظیم کنید. در حال حاضر داده های نمایشی نمایش داده می شوند.
+            {profileLoadError && (
+              <span className="block text-xs text-amber-600">
+                جزئیات خطا: {profileLoadError}
+              </span>
+            )}
+          </div>
+        )}
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr_160px]">
           <div className="space-y-6">
