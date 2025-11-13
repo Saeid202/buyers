@@ -8,7 +8,7 @@ import { products } from "@/data/products";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 
 type ProfilePageProps = {
-  searchParams?: { section?: string };
+  searchParams?: Promise<{ section?: string }>;
 };
 
 type ResolvedUser = {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
-  const resolvedSearchParams = searchParams;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
