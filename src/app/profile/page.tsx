@@ -31,7 +31,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabaseConfigured =
     Boolean(supabaseUrl && supabaseAnonKey) &&
-    !/example\.supabase\.co/i.test(supabaseUrl);
+    !/example\.supabase\.co/i.test(supabaseUrl ?? "");
 
   let user: ResolvedUser | null = null;
   let profile:
