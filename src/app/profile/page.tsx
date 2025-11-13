@@ -58,7 +58,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       if (data?.user) {
         user = {
           id: data.user.id,
-          email: data.user.email,
+          email: data.user.email ?? null,
           created_at: data.user.created_at,
           user_metadata: data.user.user_metadata,
         };
