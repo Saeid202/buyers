@@ -9,7 +9,7 @@ const quickLinks = [
 
 const supportLinks = [
   { label: "پشتیبانی ۲۴/۷", value: "۰۲۱ ۰۰۰۰۰" },
-  { label: "ایمیل", value: "hello@bazaarno.ir" },
+  { label: "ایمیل", value: "info@cargoplus.site" },
   { label: "آدرس", value: "تهران، خیابان فناوری، ساختمان بازار نو" },
 ];
 
