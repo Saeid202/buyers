@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/hooks/useCart";
@@ -11,10 +11,15 @@ import { getCartCurrency, convertShippingCost } from "@/lib/currency";
 
 export function CartPageClient() {
   const { items, subtotal, updateQuantity, removeItem, clearCart } = useCart();
+  const [isMounted, setIsMounted] = useState(false);
   const cartCurrency = useMemo(() => getCartCurrency(items), [items]);
   const baseShippingToman = 250000;
   const shipping = items.length > 0 ? convertShippingCost(baseShippingToman, cartCurrency) : 0;
   const total = subtotal + shipping;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <div className="bg-neutral-50">
@@ -33,7 +38,7 @@ export function CartPageClient() {
             >
               ادامه به ثبت سفارش
             </Link>
-            {items.length > 0 && (
+            {isMounted && items.length > 0 && (
               <button
                 type="button"
                 onClick={clearCart}
@@ -45,7 +50,7 @@ export function CartPageClient() {
           </div>
         </header>
 
-        {items.length === 0 ? (
+        {!isMounted || items.length === 0 ? (
           <EmptyState
             className="mt-10"
             title="سبد خرید خالی است"
@@ -61,13 +66,6 @@ export function CartPageClient() {
                   key={item.id}
                   className="flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center"
                 >
-                  <Link
-                    href={`/products/${item.slug}`}
-                    className="relative block h-28 w-full overflow-hidden rounded-2xl bg-neutral-100 transition hover:ring-2 hover:ring-neutral-900/40 sm:h-24 sm:w-24"
-                    aria-label={`نمایش جزئیات ${item.name}`}
-                  >
-                    <Image src={item.image} alt={item.name} fill className="object-cover" />
-                  </Link>
                   <div className="flex flex-1 flex-col gap-2 text-sm text-neutral-700">
                     <span className="font-semibold text-neutral-900">{item.name}</span>
                     <span className="text-neutral-500">
@@ -83,6 +81,13 @@ export function CartPageClient() {
                       مشاهده جزئیات محصول
                     </Link>
                   </div>
+                  <Link
+                    href={`/products/${item.slug}`}
+                    className="relative block h-28 w-full overflow-hidden rounded-2xl bg-neutral-100 transition hover:ring-2 hover:ring-neutral-900/40 sm:h-24 sm:w-24"
+                    aria-label={`نمایش جزئیات ${item.name}`}
+                  >
+                    <Image src={item.image} alt={item.name} fill className="object-cover" />
+                  </Link>
                   <div className="flex flex-col items-end gap-3 text-xs sm:flex-row sm:items-center">
                     <QuantityInput
                       value={item.quantity}
