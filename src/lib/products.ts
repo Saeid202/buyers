@@ -115,10 +115,23 @@ function mapDbProductToProduct(dbProduct: DbProductRow): Product {
 export async function getAllProducts(
   useBuildClient = false
 ): Promise<Product[]> {
+  // Check if Supabase is configured
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("placeholder")) {
+    return [];
+  }
+
   try {
     const supabase = useBuildClient
       ? getSupabaseBuildClient()
       : await getSupabaseServerClient();
+    
+    if (!supabase) {
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from("products")
       .select(
@@ -156,8 +169,21 @@ export async function getAllProducts(
  * Fetches a published product by slug
  */
 export async function getProductBySlug(slug: string): Promise<Product | null> {
+  // Check if Supabase is configured
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("placeholder")) {
+    return null;
+  }
+
   try {
     const supabase = await getSupabaseServerClient();
+    
+    if (!supabase) {
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from("products")
       .select(
@@ -213,8 +239,21 @@ export async function getFeaturedProducts(
  * Fetches latest published products
  */
 export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
+  // Check if Supabase is configured
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("placeholder")) {
+    return [];
+  }
+
   try {
     const supabase = await getSupabaseServerClient();
+    
+    if (!supabase) {
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from("products")
       .select(

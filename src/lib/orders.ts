@@ -54,6 +54,10 @@ export async function getOrdersByUserId(
       ? getSupabaseBuildClient()
       : await getSupabaseServerClient();
 
+    if (!supabase) {
+      return [];
+    }
+
     const { data, error } = await supabase
       .from("orders")
       .select("*")
@@ -77,6 +81,10 @@ export async function getAllOrders(useBuildClient = false): Promise<Order[]> {
     const supabase = useBuildClient
       ? getSupabaseBuildClient()
       : await getSupabaseServerClient();
+
+    if (!supabase) {
+      return [];
+    }
 
     const { data, error } = await supabase
       .from("orders")

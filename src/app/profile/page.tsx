@@ -53,33 +53,37 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   if (supabaseConfigured) {
     try {
       const supabase = await getSupabaseServerClient();
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error) {
-        profileLoadError = error.message;
-      }
-
-      if (data?.user) {
-        user = {
-          id: data.user.id,
-          email: data.user.email ?? null,
-          created_at: data.user.created_at,
-          user_metadata: data.user.user_metadata,
-        };
-
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("full_name, company_name, phone, website, bio")
-          .eq("id", data.user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          profileLoadError = profileError.message;
-        } else {
-          profile = profileData;
-        }
+      if (!supabase) {
+        profileLoadError = "Supabase client could not be initialized";
       } else {
-        redirect("/login");
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error) {
+          profileLoadError = error.message;
+        }
+
+        if (data?.user) {
+          user = {
+            id: data.user.id,
+            email: data.user.email ?? null,
+            created_at: data.user.created_at,
+            user_metadata: data.user.user_metadata,
+          };
+
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("full_name, company_name, phone, website, bio")
+            .eq("id", data.user.id)
+            .maybeSingle();
+
+          if (profileError) {
+            profileLoadError = profileError.message;
+          } else {
+            profile = profileData;
+          }
+        } else {
+          redirect("/login");
+        }
       }
     } catch (error) {
       const message =

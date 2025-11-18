@@ -48,11 +48,20 @@ export default async function Home() {
   };
 
   // Fetch products from Supabase
-  const [featuredBase, allProducts, latestProducts] = await Promise.all([
-    getFeaturedProducts(6),
-    getAllProducts(),
-    getLatestProducts(5),
-  ]);
+  let featuredBase: Product[] = [];
+  let allProducts: Product[] = [];
+  let latestProducts: Product[] = [];
+
+  try {
+    [featuredBase, allProducts, latestProducts] = await Promise.all([
+      getFeaturedProducts(6),
+      getAllProducts(),
+      getLatestProducts(5),
+    ]);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    // Continue with empty arrays if there's an error
+  }
 
   const spotlightProduct = featuredBase[0] ?? allProducts[0] ?? null;
 
