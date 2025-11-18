@@ -16,6 +16,7 @@ export type CartItem = {
   slug: string;
   name: string;
   price: number;
+  currency: string;
   image: string;
   quantity: number;
 };
@@ -112,6 +113,7 @@ function loadInitialState(): CartState {
         .filter((item) => item && typeof item.id === "string")
         .map((item) => ({
           ...item,
+          currency: item.currency || "IRR", // برای سازگاری با داده‌های قدیمی
           quantity: Number.isFinite(item.quantity) ? Math.max(1, Number(item.quantity)) : 1,
         })),
     };

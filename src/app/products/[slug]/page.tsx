@@ -43,14 +43,15 @@ export async function generateMetadata({
     openGraph: {
       title: product.name,
       description: product.shortDescription,
-      images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
+      images: product.images.map((image) => ({
+        url: image.url,
+        alt: image.alt,
+      })),
     },
   };
 }
 
-export default async function ProductPage({
-  params,
-}: ProductPageProps) {
+export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
 
@@ -84,15 +85,22 @@ export default async function ProductPage({
           </ol>
         </nav>
 
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <ProductGallery images={product.images} name={product.name} />
-
+        <div className="mt-10 grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="flex flex-col gap-8">
             <header className="space-y-4">
-              <h1 className="text-3xl font-bold text-neutral-900">{product.name}</h1>
-              <p className="text-sm text-neutral-600">{product.shortDescription}</p>
+              <h1 className="text-3xl font-bold text-neutral-900">
+                {product.name}
+              </h1>
+              <p className="text-sm text-neutral-600">
+                {product.shortDescription}
+              </p>
               <div className="flex flex-wrap items-center gap-4">
-                <PriceTag value={product.price} size="lg" className="font-black" />
+                <PriceTag
+                  value={product.price}
+                  currency={product.currency}
+                  size="lg"
+                  className="font-black"
+                />
                 <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-600">
                   موجود در انبار: {product.inventory} عدد
                 </span>
@@ -100,8 +108,12 @@ export default async function ProductPage({
             </header>
 
             <section className="space-y-4 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-neutral-900">معرفی محصول</h2>
-              <p className="text-sm leading-7 text-neutral-600">{product.description}</p>
+              <h2 className="text-lg font-semibold text-neutral-900">
+                معرفی محصول
+              </h2>
+              <p className="text-sm leading-7 text-neutral-600">
+                {product.description}
+              </p>
               <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                 {product.tags.map((tag) => (
                   <Badge key={tag}>{tag}</Badge>
@@ -110,12 +122,16 @@ export default async function ProductPage({
             </section>
 
             <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-neutral-900">ویژگی های شاخص</h2>
+              <h2 className="text-lg font-semibold text-neutral-900">
+                ویژگی های شاخص
+              </h2>
               <FeatureList features={product.features} />
             </section>
 
             <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-neutral-900">مشخصات فنی</h2>
+              <h2 className="text-lg font-semibold text-neutral-900">
+                مشخصات فنی
+              </h2>
               <SpecList specs={product.specs} />
             </section>
 
@@ -128,6 +144,8 @@ export default async function ProductPage({
               </div>
             </section>
           </div>
+
+          <ProductGallery images={product.images} name={product.name} />
         </div>
 
         <aside className="mt-12 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
@@ -138,6 +156,7 @@ export default async function ProductPage({
                 slug: product.slug,
                 name: product.name,
                 price: product.price,
+                currency: product.currency,
                 image: product.images[0]?.url ?? "",
               }}
             />
@@ -148,14 +167,17 @@ export default async function ProductPage({
               مشاهده سبد خرید
             </Link>
             <p className="text-xs text-neutral-500">
-              با افزودن به سبد خرید می توانید مقدار دلخواه را در مرحله بعد مشخص کنید.
+              با افزودن به سبد خرید می توانید مقدار دلخواه را در مرحله بعد مشخص
+              کنید.
             </p>
           </div>
         </aside>
 
         {relatedProducts.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-lg font-semibold text-neutral-900">محصولات مرتبط</h2>
+            <h2 className="text-lg font-semibold text-neutral-900">
+              محصولات مرتبط
+            </h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedProducts.map((item) => (
                 <Link
@@ -175,8 +197,15 @@ export default async function ProductPage({
                     <Badge variant="neutral" className="w-fit">
                       {item.categories[0]}
                     </Badge>
-                    <span className="font-semibold text-neutral-900">{item.name}</span>
-                    <PriceTag value={item.price} size="sm" className="text-neutral-700" />
+                    <span className="font-semibold text-neutral-900">
+                      {item.name}
+                    </span>
+                    <PriceTag
+                      value={item.price}
+                      currency={item.currency}
+                      size="sm"
+                      className="text-neutral-700"
+                    />
                   </div>
                 </Link>
               ))}

@@ -1,15 +1,19 @@
 'use client';
 
+import { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/hooks/useCart";
 import { QuantityInput } from "@/components/common/QuantityInput";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PriceTag } from "@/components/common/PriceTag";
+import { getCartCurrency, convertShippingCost } from "@/lib/currency";
 
 export function CartPageClient() {
   const { items, subtotal, updateQuantity, removeItem, clearCart } = useCart();
-  const shipping = items.length > 0 ? 250000 : 0;
+  const cartCurrency = useMemo(() => getCartCurrency(items), [items]);
+  const baseShippingToman = 250000;
+  const shipping = items.length > 0 ? convertShippingCost(baseShippingToman, cartCurrency) : 0;
   const total = subtotal + shipping;
 
   return (
@@ -67,10 +71,10 @@ export function CartPageClient() {
                   <div className="flex flex-1 flex-col gap-2 text-sm text-neutral-700">
                     <span className="font-semibold text-neutral-900">{item.name}</span>
                     <span className="text-neutral-500">
-                      قیمت واحد: <PriceTag value={item.price} size="sm" weight="medium" className="text-neutral-600" />
+                      قیمت واحد: <PriceTag value={item.price} currency={item.currency} size="sm" weight="medium" className="text-neutral-600" />
                     </span>
                     <span className="font-medium text-neutral-900">
-                      <PriceTag value={item.price * item.quantity} weight="bold" />
+                      <PriceTag value={item.price * item.quantity} currency={item.currency} weight="bold" />
                     </span>
                     <Link
                       href={`/products/${item.slug}`}
@@ -102,19 +106,19 @@ export function CartPageClient() {
               <div className="space-y-3 text-sm text-neutral-600">
                 <div className="flex items-center justify-between">
                   <span>جمع جزء</span>
-                  <PriceTag value={subtotal} weight="medium" />
+                  <PriceTag value={subtotal} currency={cartCurrency} weight="medium" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span>هزینه ارسال</span>
                   {shipping === 0 ? (
                     <span className="font-medium text-neutral-900">رایگان</span>
                   ) : (
-                    <PriceTag value={shipping} weight="medium" />
+                    <PriceTag value={shipping} currency={cartCurrency} weight="medium" />
                   )}
                 </div>
                 <div className="flex items-center justify-between border-t border-neutral-200 pt-3 text-neutral-900">
                   <span className="font-semibold">جمع کل</span>
-                  <PriceTag value={total} size="lg" weight="bold" className="font-black" />
+                  <PriceTag value={total} currency={cartCurrency} size="lg" weight="bold" className="font-black" />
                 </div>
               </div>
               <Link

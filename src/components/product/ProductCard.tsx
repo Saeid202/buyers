@@ -22,7 +22,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <h3 className="text-lg font-semibold text-neutral-900 truncate">{product.name}</h3>
         <p className="text-sm text-neutral-600 line-clamp-3 truncate">{product.shortDescription}</p>
         <div className="mt-auto text-left">
-          <PriceTag value={product.price} />
+          <PriceTag value={product.price} currency={product.currency} />
         </div>
           <Link
               href={`/products/${product.slug}`}

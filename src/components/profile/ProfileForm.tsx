@@ -7,53 +7,53 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 type ProfileFormProps = {
   userId: string;
   email: string;
+  fullName: string;
   firstName: string;
   lastName: string;
   companyName: string;
   companySite: string;
-  address: string;
+  phone: string;
   notes: string;
 };
 
 type FormState = {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   companyName: string;
   companySite: string;
-  address: string;
+  phone: string;
   notes: string;
 };
 
 export function ProfileForm({
   userId,
   email,
-  firstName,
-  lastName,
+  fullName,
   companyName,
   companySite,
-  address,
+  phone,
   notes,
 }: ProfileFormProps) {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
 
   const [formValues, setFormValues] = useState<FormState>({
-    firstName,
-    lastName,
+    fullName,
     companyName,
     companySite,
-    address,
+    phone,
     notes,
   });
-  const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">(
+    "idle"
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleChange = (
-    field: keyof FormState,
-  ) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = event.target.value;
-    setFormValues((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange =
+    (field: keyof FormState) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = event.target.value;
+      setFormValues((prev) => ({ ...prev, [field]: value }));
+    };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,20 +67,18 @@ export function ProfileForm({
     setStatus("saving");
     setErrorMessage(null);
 
-    const { error } = await supabase
-      .from("user_profiles")
-      .upsert(
-        {
-          user_id: userId,
-          first_name: formValues.firstName.trim(),
-          last_name: formValues.lastName.trim(),
-          company_name: formValues.companyName.trim(),
-          company_site: formValues.companySite.trim(),
-          address: formValues.address.trim(),
-          notes: formValues.notes.trim(),
-        },
-        { onConflict: "user_id" },
-      );
+    const { error } = await supabase.from("profiles").upsert(
+      {
+        id: userId,
+        full_name: formValues.fullName.trim() || null,
+        company_name: formValues.companyName.trim() || null,
+        website: formValues.companySite.trim() || null,
+        phone: formValues.phone.trim() || null,
+        bio: formValues.notes.trim() || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
 
     if (error) {
       setStatus("error");
@@ -99,7 +97,9 @@ export function ProfileForm({
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-neutral-900">پروفایل کاربری</h2>
+          <h2 className="text-lg font-semibold text-neutral-900">
+            پروفایل کاربری
+          </h2>
           <p className="mt-1 text-xs text-neutral-500">
             اطلاعات خود را برای دریافت خدمات اختصاصی بازار نو تکمیل کنید.
           </p>
@@ -109,22 +109,13 @@ export function ProfileForm({
         </span>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormField
-          id="first-name"
-          label="نام"
-          placeholder="مثال: علی"
-          value={formValues.firstName}
-          onChange={handleChange("firstName")}
-        />
-        <FormField
-          id="last-name"
-          label="نام خانوادگی"
-          placeholder="مثال: رضایی"
-          value={formValues.lastName}
-          onChange={handleChange("lastName")}
-        />
-      </div>
+      <FormField
+        id="full-name"
+        label="نام و نام خانوادگی"
+        placeholder="مثال: علی رضایی"
+        value={formValues.fullName}
+        onChange={handleChange("fullName")}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
@@ -135,20 +126,20 @@ export function ProfileForm({
           onChange={handleChange("companyName")}
         />
         <FormField
-          id="company-site"
-          label="وب سایت شرکت"
-          placeholder="https://example.com"
-          value={formValues.companySite}
-          onChange={handleChange("companySite")}
+          id="phone"
+          label="شماره تماس"
+          placeholder="مثال: ۰۹۱۲۱۲۳۴۵۶۷"
+          value={formValues.phone}
+          onChange={handleChange("phone")}
         />
       </div>
 
       <FormField
-        id="address"
-        label="آدرس کامل"
-        placeholder="تهران، خیابان ..."
-        value={formValues.address}
-        onChange={handleChange("address")}
+        id="company-site"
+        label="وب سایت شرکت"
+        placeholder="https://example.com"
+        value={formValues.companySite}
+        onChange={handleChange("companySite")}
       />
 
       <div className="space-y-2">
@@ -182,7 +173,9 @@ export function ProfileForm({
       </div>
 
       {status === "error" && errorMessage && (
-        <p className="text-xs text-red-600">خطا در ذخیره اطلاعات: {errorMessage}</p>
+        <p className="text-xs text-red-600">
+          خطا در ذخیره اطلاعات: {errorMessage}
+        </p>
       )}
     </form>
   );

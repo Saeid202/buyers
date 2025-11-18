@@ -2,7 +2,7 @@ import { formatPrice } from "@/lib/formatPrice";
 
 type PriceTagProps = {
   value: number;
-  currencyLabel?: string;
+  currency?: string;
   size?: "sm" | "md" | "lg";
   weight?: "regular" | "medium" | "bold";
   className?: string;
@@ -22,14 +22,14 @@ const weightMap = {
 
 export function PriceTag({
   value,
-  currencyLabel,
+  currency,
   size = "md",
   weight = "bold",
   className = "",
 }: PriceTagProps) {
   return (
     <span className={`${sizeMap[size]} ${weightMap[weight]} text-primary ${className}`}>
-      {formatPrice(value, currencyLabel)}
+      {formatPrice(value, currency)}
     </span>
   );
 }

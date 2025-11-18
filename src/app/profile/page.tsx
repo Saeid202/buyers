@@ -6,6 +6,13 @@ import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import type { Product } from "@/data/products";
 import { getAllProducts } from "@/lib/products";
 import { ProfileForm } from "@/components/profile/ProfileForm";
+import {
+  getOrdersByUserId,
+  getOrderStatusLabel,
+  type Order,
+} from "@/lib/orders";
+import { PriceTag } from "@/components/common/PriceTag";
+import { getCartCurrency } from "@/lib/currency";
 
 type ProfilePageProps = {
   searchParams?: Promise<{ section?: string }>;
@@ -34,16 +41,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     !/example\.supabase\.co/i.test(supabaseUrl ?? "");
 
   let user: ResolvedUser | null = null;
-  let profile:
-    | {
-        first_name?: string | null;
-        last_name?: string | null;
-        company_name?: string | null;
-        company_site?: string | null;
-        address?: string | null;
-        notes?: string | null;
-      }
-    | null = null;
+  let profile: {
+    full_name?: string | null;
+    company_name?: string | null;
+    phone?: string | null;
+    website?: string | null;
+    bio?: string | null;
+  } | null = null;
   let profileLoadError: string | null = null;
 
   if (supabaseConfigured) {
@@ -64,11 +68,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         };
 
         const { data: profileData, error: profileError } = await supabase
-          .from("user_profiles")
-          .select(
-            "first_name, last_name, company_name, company_site, address, notes",
-          )
-          .eq("user_id", data.user.id)
+          .from("profiles")
+          .select("full_name, company_name, phone, website, bio")
+          .eq("id", data.user.id)
           .maybeSingle();
 
         if (profileError) {
@@ -105,12 +107,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     };
   }
 
-  const firstName =
-    profile?.first_name ?? (user.user_metadata?.first_name as string) ?? "";
-  const lastName =
-    profile?.last_name ?? (user.user_metadata?.last_name as string) ?? "";
+  // Extract first and last name from full_name
+  const fullName =
+    profile?.full_name ?? (user.user_metadata?.full_name as string) ?? "";
+  const nameParts = fullName.trim().split(/\s+/);
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ") ?? "";
   const displayName =
-    `${firstName} ${lastName}`.trim() || (user.email?.split("@")[0] ?? "کاربر بازار نو");
+    fullName.trim() || (user.email?.split("@")[0] ?? "کاربر بازار نو");
 
   const email = user.email ?? "-";
   const joinedAt = user.created_at
@@ -121,17 +125,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       })
     : "نامشخص";
 
-  const companyName =
-    profile?.company_name ??
-    (user.user_metadata?.company_name as string) ??
-    "";
-  const companySite =
-    profile?.company_site ??
-    (user.user_metadata?.company_site as string) ??
-    "";
-  const address =
-    profile?.address ?? (user.user_metadata?.address as string) ?? "";
-  const notes = profile?.notes ?? (user.user_metadata?.bio as string) ?? "";
+  const companyName = profile?.company_name ?? "";
+  const companySite = profile?.website ?? "";
+  const phone = profile?.phone ?? "";
+  const notes = profile?.bio ?? "";
 
   const activeSection =
     resolvedSearchParams?.section === "orders" ? "orders" : "profile";
@@ -146,31 +143,39 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   const recommendedProducts = getRecommendedProducts(allProducts, 4);
 
-  const recentOrders: Array<{
-    id: string;
-    status: "در حال پردازش" | "ارسال شد" | "تحویل شده";
-    total: number;
-    created_at: string;
-  }> = [
-    {
-      id: "BN-98452",
-      status: "تحویل شده",
-      total: 52800000,
-      created_at: "2025-05-21",
-    },
-    {
-      id: "BN-98412",
-      status: "ارسال شد",
-      total: 7800000,
-      created_at: "2025-05-17",
-    },
-    {
-      id: "BN-97333",
-      status: "در حال پردازش",
-      total: 18900000,
-      created_at: "2025-05-12",
-    },
-  ];
+  // Fetch orders from database
+  let recentOrders: Order[] = [];
+  if (user && !isDemoMode) {
+    try {
+      recentOrders = await getOrdersByUserId(user.id);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  }
+
+  // Fallback to demo data if no orders found
+  if (recentOrders.length === 0 && isDemoMode) {
+    recentOrders = [
+      {
+        id: "BN-98452",
+        user_id: null,
+        customer_name: "کاربر نمونه",
+        customer_phone: "09121234567",
+        customer_email: null,
+        shipping_address: "تهران، خیابان نمونه",
+        shipping_city: "تهران",
+        postal_code: "1234567890",
+        notes: null,
+        items: [],
+        subtotal: 52800000,
+        shipping_cost: 250000,
+        total: 53050000,
+        status: "delivered",
+        created_at: "2025-05-21T00:00:00Z",
+        updated_at: "2025-05-21T00:00:00Z",
+      },
+    ] as Order[];
+  }
 
   return (
     <div className="bg-neutral-50 py-16">
@@ -182,7 +187,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </div>
             <div className="space-y-1 text-sm">
               <p className="text-xs text-neutral-500">خوش آمدید</p>
-              <h1 className="text-2xl font-black text-neutral-900">{displayName}</h1>
+              <h1 className="text-2xl font-black text-neutral-900">
+                {displayName}
+              </h1>
               <div className="flex flex-wrap gap-3 text-xs text-neutral-500">
                 <span>ایمیل: {email}</span>
                 <span className="hidden sm:inline">•</span>
@@ -221,11 +228,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 <ProfileForm
                   email={email}
                   userId={user.id}
+                  fullName={fullName}
                   firstName={firstName}
                   lastName={lastName}
                   companyName={companyName}
                   companySite={companySite}
-                  address={address}
+                  phone={phone}
                   notes={notes}
                 />
                 <AccountHighlights
@@ -300,21 +308,14 @@ function getRecommendedProducts(allProducts: Product[], limit: number) {
   return unique;
 }
 
-function OrdersPanel({
-  recentOrders,
-}: {
-  recentOrders: {
-    id: string;
-    status: "در حال پردازش" | "ارسال شد" | "تحویل شده";
-    total: number;
-    created_at: string;
-  }[];
-}) {
+function OrdersPanel({ recentOrders }: { recentOrders: Order[] }) {
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-neutral-900">مدیریت سفارش ها</h2>
+          <h2 className="text-lg font-semibold text-neutral-900">
+            مدیریت سفارش ها
+          </h2>
           <p className="mt-1 text-xs text-neutral-500">
             وضعیت سفارش های فعال، در حال ارسال و تحویل شده را اینجا پیگیری کنید.
           </p>
@@ -359,18 +360,23 @@ function OrdersPanel({
             className="flex flex-col gap-3 rounded-2xl border border-neutral-100 px-4 py-3 transition hover:border-neutral-300 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex flex-col gap-1">
-              <span className="font-semibold text-neutral-900">سفارش {order.id}</span>
+              <span className="font-semibold text-neutral-900">
+                سفارش {order.id.substring(0, 8)}
+              </span>
               <span className="text-xs text-neutral-500">
-                ثبت شده در {new Date(order.created_at).toLocaleDateString("fa-IR")}
+                ثبت شده در{" "}
+                {new Date(order.created_at).toLocaleDateString("fa-IR")}
               </span>
             </div>
             <div className="flex flex-col-reverse gap-2 text-sm sm:flex-row sm:items-center">
               <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600">
-                {order.status}
+                {getOrderStatusLabel(order.status)}
               </span>
-              <span className="font-bold text-neutral-900">
-                {new Intl.NumberFormat("fa-IR").format(order.total)} تومان
-              </span>
+              <PriceTag
+                value={order.total}
+                currency={getCartCurrency(order.items)}
+                weight="bold"
+              />
             </div>
           </li>
         ))}
@@ -397,7 +403,9 @@ function OrdersMetrics() {
           >
             <span className="text-xs text-neutral-500">{item.label}</span>
             <strong className="text-base text-neutral-900">{item.value}</strong>
-            <span className="text-xs text-emerald-500">{item.trend} نسبت به ماه قبل</span>
+            <span className="text-xs text-emerald-500">
+              {item.trend} نسبت به ماه قبل
+            </span>
           </div>
         ))}
       </div>
@@ -408,9 +416,12 @@ function OrdersMetrics() {
 function OrdersSupportCard() {
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-neutral-900">پشتیبانی سفارش ها</h2>
+      <h2 className="text-lg font-semibold text-neutral-900">
+        پشتیبانی سفارش ها
+      </h2>
       <p className="mt-2 text-sm leading-7 text-neutral-600">
-        اگر نیاز به تغییر زمان ارسال یا پیگیری وضعیت سفارش دارید، از طریق مرکز پشتیبانی سفارش ها اقدام کنید.
+        اگر نیاز به تغییر زمان ارسال یا پیگیری وضعیت سفارش دارید، از طریق مرکز
+        پشتیبانی سفارش ها اقدام کنید.
       </p>
       <div className="mt-4 space-y-2 text-sm text-neutral-700">
         <p>تلفن ویژه سفارشات: ۰۲۱-۴۱۶۸۸۱۰۰</p>
@@ -482,17 +493,28 @@ function AccountHighlights({
   );
 }
 
-function SuggestedProducts({ recommendedProducts }: { recommendedProducts: Product[] }) {
+function SuggestedProducts({
+  recommendedProducts,
+}: {
+  recommendedProducts: Product[];
+}) {
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-neutral-900">پیشنهاد برای خرید بعدی</h2>
-      <p className="mt-2 text-xs text-neutral-500">بر اساس کالاهای محبوب بازار نو</p>
+      <h2 className="text-lg font-semibold text-neutral-900">
+        پیشنهاد برای خرید بعدی
+      </h2>
+      <p className="mt-2 text-xs text-neutral-500">
+        بر اساس کالاهای محبوب بازار نو
+      </p>
       <ul className="mt-4 space-y-4">
         {recommendedProducts.map((product) => (
           <li key={product.id} className="flex items-center gap-3">
             <div className="relative h-14 w-14 overflow-hidden rounded-2xl">
               <Image
-                src={product.images[0]?.url ?? "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=400&q=80"}
+                src={
+                  product.images[0]?.url ??
+                  "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=400&q=80"
+                }
                 alt={product.images[0]?.alt ?? product.name}
                 fill
                 sizes="56px"
@@ -500,10 +522,14 @@ function SuggestedProducts({ recommendedProducts }: { recommendedProducts: Produ
               />
             </div>
             <div className="flex flex-col text-xs text-neutral-600">
-              <span className="font-semibold text-neutral-900">{product.name}</span>
-              <span className="text-neutral-500">
-                {new Intl.NumberFormat("fa-IR").format(product.price)} تومان
+              <span className="font-semibold text-neutral-900">
+                {product.name}
               </span>
+              <PriceTag
+                value={product.price}
+                currency={product.currency}
+                size="sm"
+              />
             </div>
           </li>
         ))}
@@ -515,9 +541,12 @@ function SuggestedProducts({ recommendedProducts }: { recommendedProducts: Produ
 function SupportCard() {
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-neutral-900">پشتیبانی بازار نو</h2>
+      <h2 className="text-lg font-semibold text-neutral-900">
+        پشتیبانی بازار نو
+      </h2>
       <p className="mt-2 text-sm leading-7 text-neutral-600">
-        برای تغییر اطلاعات حساب یا سوال درباره سفارش ها با تیم پشتیبانی تماس بگیرید. ما همه روزه از ساعت ۹ تا ۲۱ پاسخگو هستیم.
+        برای تغییر اطلاعات حساب یا سوال درباره سفارش ها با تیم پشتیبانی تماس
+        بگیرید. ما همه روزه از ساعت ۹ تا ۲۱ پاسخگو هستیم.
       </p>
       <div className="mt-4 space-y-2 text-sm text-neutral-700">
         <p>تلفن: ۰۲۱-۴۱۶۸۸۲۵۰</p>
