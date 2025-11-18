@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  getFeaturedProducts,
-  products,
-} from "@/data/products";
 import type { Product } from "@/data/products";
 import { ProductCard } from "@/components/product/ProductCard";
 import { PriceTag } from "@/components/common/PriceTag";
 import { HeroSlider } from "@/components/home/HeroSlider";
 import {Features} from "@/components/home/Features";
+import { 
+  getFeaturedProducts, 
+  getLatestProducts, 
+  getAllProducts 
+} from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "خانه | بازار نو",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     "بازار نو فروشگاه آنلاین محصولات دیجیتال، گجت و لوازم خانه هوشمند به زبان فارسی با ارسال سریع و پشتیبانی اختصاصی است.",
 };
 
-export default function Home() {
+export default async function Home() {
   const ensureUnique = (
     source: Product[],
     required: number,
@@ -46,18 +47,24 @@ export default function Home() {
     return result.slice(0, required);
   };
 
-  const featuredBase = getFeaturedProducts(6);
-  const spotlightProduct = featuredBase[0] ?? products[0] ?? null;
+  // Fetch products from Supabase
+  const [featuredBase, allProducts, latestProducts] = await Promise.all([
+    getFeaturedProducts(6),
+    getAllProducts(),
+    getLatestProducts(5),
+  ]);
+
+  const spotlightProduct = featuredBase[0] ?? allProducts[0] ?? null;
 
   const quickBuyProducts = ensureUnique(
     spotlightProduct ? featuredBase.filter((item) => item.id !== spotlightProduct.id) : featuredBase,
     4,
-    products,
+    allProducts,
     spotlightProduct ? [spotlightProduct.id] : [],
   );
 
-  const featuredGridProducts = ensureUnique(featuredBase, 5, products);
-  const newArrivalProducts = ensureUnique(products, 5, products);
+  const featuredGridProducts = ensureUnique(featuredBase, 5, allProducts);
+  const newArrivalProducts = ensureUnique(latestProducts, 5, allProducts);
 
   return (
     <div className="bg-neutral-50">

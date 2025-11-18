@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body
-        className={`${vazirmatn.variable} bg-neutral-50 text-neutral-900 antialiased`}
+        className={`${vazirmatn.variable} bg-neutral-50 text-neutral-900 antialiased overflow-x-hidden`}
       >
         <SupabaseAuthProvider>
           <CartProvider>

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import type { Product } from "@/data/products";
-import { products } from "@/data/products";
+import { getAllProducts } from "@/lib/products";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 
 type ProfilePageProps = {
@@ -136,7 +136,15 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const activeSection =
     resolvedSearchParams?.section === "orders" ? "orders" : "profile";
 
-  const recommendedProducts = getRecommendedProducts(products, 4);
+  // Fetch products from Supabase for recommendations
+  let allProducts: Product[] = [];
+  try {
+    allProducts = await getAllProducts();
+  } catch (error) {
+    console.error("Error fetching products for profile page:", error);
+  }
+
+  const recommendedProducts = getRecommendedProducts(allProducts, 4);
 
   const recentOrders: Array<{
     id: string;

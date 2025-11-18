@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  getProductBySlug,
-  products,
-} from "@/data/products";
+import { getProductBySlug, getAllProducts } from "@/lib/products";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { PriceTag } from "@/components/common/PriceTag";
@@ -18,14 +15,21 @@ type ProductPageProps = {
 };
 
 export async function generateStaticParams() {
-  return products.map((product) => ({ slug: product.slug }));
+  try {
+    // Use build client for static generation (no cookies available)
+    const products = await getAllProducts(true);
+    return products.map((product) => ({ slug: product.slug }));
+  } catch (error) {
+    console.error("Error generating static params:", error);
+    return [];
+  }
 }
 
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -48,13 +52,14 @@ export default async function ProductPage({
   params,
 }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = products
+  const allProducts = await getAllProducts();
+  const relatedProducts = allProducts
     .filter((item) => item.slug !== product.slug)
     .slice(0, 3);
 

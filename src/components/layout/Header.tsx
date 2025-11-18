@@ -7,6 +7,17 @@ import { ShoppingBag, Search, User, LogOut } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseAuth } from "@/providers/SupabaseAuthProvider";
 
+// Hook to prevent hydration mismatch
+function useIsMounted() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  return isMounted;
+}
+
 const navItems = [
   { href: "/#categories", label: "دسته بندی کالاها" },
   { href: "/checkout", label: "ثبت سفارش" },
@@ -18,6 +29,7 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const isMounted = useIsMounted();
 
   const profileName = useMemo(() => {
     if (!user) return "";
@@ -59,16 +71,16 @@ export function Header() {
       <div className="relative px-4 py-3 sm:px-6 lg:px-10">
         <div className="absolute inset-0 -z-20 overflow-hidden rounded-3xl border border-white/60 bg-gradient-to-r from-white/90 via-white/75 to-white/90 shadow-[0_15px_45px_-20px_rgba(20,20,20,0.5)] backdrop-blur-xl">
           <div className="absolute -top-24 right-8 h-56 w-56 rounded-full bg-gradient-to-br from-rose-200/60 via-purple-200/40 to-blue-200/60 blur-3xl" />
-          <div className="absolute -bottom-28.left-0 h-60 w-60 rounded-full bg-gradient-to-br from-sky-200/50 via-teal-200/40 to-emerald-200/50 blur-3xl" />
-          <div className="absolute -bottom-8.right-1/3 h-24 w-24 rounded-full border border-white/40 bg-white/40 backdrop-blur-xl" />
+          <div className="absolute -bottom-28 left-0 h-60 w-60 rounded-full bg-gradient-to-br from-sky-200/50 via-teal-200/40 to-emerald-200/50 blur-3xl" />
+          <div className="absolute -bottom-8 right-1/3 h-24 w-24 rounded-full border border-white/40 bg-white/40 backdrop-blur-xl" />
         </div>
 
 
 
-        <div className="relative mx-auto flex container flex-wrap items-center gap-3">
+        <div className="relative mx-auto flex max-w-7xl flex-wrap items-center gap-3">
 
           <div className={"flex justify-between w-full"}>
-            <Link href="/" className="flex.items-center gap-3 text-neutral-900">
+            <Link href="/" className="flex items-center gap-3 text-neutral-900">
               <span className="text-2xl font-black">بازار نو</span>
             </Link>
 
@@ -135,13 +147,16 @@ export function Header() {
 
               <Link
                   href="/cart"
-                  className="relative flex items-center gap-2 rounded-2xl border.border-white/70 bg-white/70 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:border-neutral-900 hover:text-neutral-900"
+                  className="relative flex items-center gap-2 rounded-2xl border border-white/70 bg-white/70 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:border-neutral-900 hover:text-neutral-900"
               >
                 <ShoppingBag className="size-4" aria-hidden />
                 <span className="hidden sm:inline">سبد خرید</span>
-                <span className="flex size-5 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
-                {totalItems}
-              </span>
+                <span 
+                  className={`flex size-5 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white ${!isMounted || totalItems === 0 ? 'hidden' : ''}`}
+                  suppressHydrationWarning
+                >
+                  {isMounted ? totalItems : 0}
+                </span>
               </Link>
             </div>
           </div>
@@ -153,7 +168,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="whitespace-nowrap rounded-xl px-3 py-2 text-neutral-600 transition.hover:bg-white/80 hover:text-neutral-900"
+                  className="whitespace-nowrap rounded-xl px-3 py-2 text-neutral-600 transition hover:bg-white/80 hover:text-neutral-900"
                 >
                   {item.label}
                 </Link>

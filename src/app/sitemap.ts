@@ -1,9 +1,16 @@
 import type { MetadataRoute } from "next";
-import { products } from "@/data/products";
+import { getAllProducts } from "@/lib/products";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bazaarno.example.com";
   const lastModified = new Date();
+
+  let products: Array<{ slug: string }> = [];
+  try {
+    products = await getAllProducts();
+  } catch (error) {
+    console.error("Error fetching products for sitemap:", error);
+  }
 
   return [
     {

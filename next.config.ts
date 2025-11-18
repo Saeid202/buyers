@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "treestone.com",
       },
+      {
+        protocol: "https",
+        hostname: "ujhdxmtcusbewkfaweeg.supabase.co",
+      },
     ],
   },
 };
