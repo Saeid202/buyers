@@ -134,21 +134,13 @@ export async function getAllProducts(
     
     const { data, error } = await supabase
       .from("products")
-      .select(
-        `
-        *,
-        product_images(
-          id,
-          storage_path,
-          position
-        )
-      `
-      )
+      .select("*")
       .eq("status", "published")
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching products:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return [];
     }
 
@@ -184,22 +176,14 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     
     const { data, error } = await supabase
       .from("products")
-      .select(
-        `
-        *,
-        product_images(
-          id,
-          storage_path,
-          position
-        )
-      `
-      )
+      .select("*")
       .eq("slug", slug)
       .eq("status", "published")
       .single();
 
     if (error) {
       console.error("Error fetching product by slug:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return null;
     }
 
@@ -252,22 +236,14 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
     
     const { data, error } = await supabase
       .from("products")
-      .select(
-        `
-        *,
-        product_images(
-          id,
-          storage_path,
-          position
-        )
-      `
-      )
+      .select("*")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (error) {
       console.error("Error fetching latest products:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return [];
     }
 
