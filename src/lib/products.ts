@@ -137,7 +137,7 @@ export async function getAllProducts(
       .select(
         `
         *,
-        product_images:product_images!product_images_product_id_fkey(
+        product_images(
           id,
           storage_path,
           position
@@ -187,7 +187,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       .select(
         `
         *,
-        product_images:product_images!product_images_product_id_fkey(
+        product_images(
           id,
           storage_path,
           position
@@ -255,7 +255,7 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
       .select(
         `
         *,
-        product_images:product_images!product_images_product_id_fkey(
+        product_images(
           id,
           storage_path,
           position
