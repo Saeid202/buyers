@@ -37,6 +37,47 @@ function getProductImageUrl(storagePath: string): string {
 }
 
 /**
+ * Fetches product images for a given product ID
+ */
+async function getProductImages(
+  productId: string,
+  useBuildClient = false
+): Promise<Array<{ storage_path: string; position: number }>> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return [];
+  }
+
+  try {
+    const supabase = useBuildClient
+      ? getSupabaseBuildClient()
+      : await getSupabaseServerClient();
+    
+    if (!supabase) {
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from("product_images")
+      .select("storage_path, position")
+      .eq("product_id", productId)
+      .order("position", { ascending: true });
+
+    if (error) {
+      // Silently fail - products can work without images
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    // Silently fail - products can work without images
+    return [];
+  }
+}
+
+/**
  * Maps database row to Product type
  */
 function mapDbProductToProduct(dbProduct: DbProductRow): Product {
@@ -148,7 +189,18 @@ export async function getAllProducts(
       return [];
     }
 
-    return data.map(mapDbProductToProduct);
+    // Fetch images for all products
+    const productsWithImages = await Promise.all(
+      data.map(async (product) => {
+        const images = await getProductImages(product.id, useBuildClient);
+        return {
+          ...product,
+          product_images: images.length > 0 ? images : null,
+        };
+      })
+    );
+
+    return productsWithImages.map(mapDbProductToProduct);
   } catch (error) {
     console.error("Error in getAllProducts:", error);
     return [];
@@ -191,7 +243,14 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       return null;
     }
 
-    return mapDbProductToProduct(data);
+    // Fetch images for the product
+    const images = await getProductImages(data.id);
+    const productWithImages = {
+      ...data,
+      product_images: images.length > 0 ? images : null,
+    };
+
+    return mapDbProductToProduct(productWithImages);
   } catch (error) {
     console.error("Error in getProductBySlug:", error);
     return null;
@@ -251,7 +310,18 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
       return [];
     }
 
-    return data.map(mapDbProductToProduct);
+    // Fetch images for all products
+    const productsWithImages = await Promise.all(
+      data.map(async (product) => {
+        const images = await getProductImages(product.id);
+        return {
+          ...product,
+          product_images: images.length > 0 ? images : null,
+        };
+      })
+    );
+
+    return productsWithImages.map(mapDbProductToProduct);
   } catch (error) {
     console.error("Error in getLatestProducts:", error);
     return [];
