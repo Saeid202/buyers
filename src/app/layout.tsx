@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { NavigationProgress } from "@/components/common/NavigationProgress";
 import { CartProvider } from "@/providers/CartProvider";
 import { SupabaseAuthProvider } from "@/providers/SupabaseAuthProvider";
 
@@ -14,11 +16,14 @@ const vazirmatn = Vazirmatn({
 
 export const metadata: Metadata = {
   title: {
-    default: "بازار نو | فروشگاه آنلاین محصولات دیجیتال",
-    template: "%s | بازار نو",
+    default: "CargoPlus | فروشگاه آنلاین لوکس محصولات دیجیتال",
+    template: "%s | CargoPlus",
   },
   description:
-    "بازار نو فروشگاه آنلاین فارسی برای خرید محصولات دیجیتال، گجت و خانه داری با ارسال سریع و پشتیبانی اختصاصی است.",
+    "CargoPlus (کارگو پلاس) فروشگاه آنلاین لوکس و مدرن برای خرید محصولات دیجیتال، گجت‌های پوشیدنی و تجهیزات خانه هوشمند با ارسال سریع، ضمانت بازگشت و پشتیبانی ۲۴/۷.",
+  icons: {
+    icon: "/favicon.jpg",
+  },
 };
 
 export default function RootLayout({
@@ -29,13 +34,16 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body
-        className={`${vazirmatn.variable} bg-neutral-50 text-neutral-900 antialiased overflow-x-hidden`}
+        className={`${vazirmatn.variable} bg-gradient-to-b from-purple-50/30 via-white to-amber-50/20 text-neutral-900 antialiased`}
       >
         <SupabaseAuthProvider>
           <CartProvider>
+            <Suspense fallback={null}>
+              <NavigationProgress />
+            </Suspense>
             <div className="flex min-h-screen flex-col">
               <Header />
-              <main className="flex-1 bg-neutral-50">{children}</main>
+              <main className="flex-1">{children}</main>
               <Footer />
             </div>
           </CartProvider>

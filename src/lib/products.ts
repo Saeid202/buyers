@@ -45,7 +45,7 @@ async function getProductImages(
 ): Promise<Array<{ storage_path: string; position: number }>> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseAnonKey) {
     return [];
   }
@@ -54,7 +54,7 @@ async function getProductImages(
     const supabase = useBuildClient
       ? getSupabaseBuildClient()
       : await getSupabaseServerClient();
-    
+
     if (!supabase) {
       return [];
     }
@@ -159,7 +159,7 @@ export async function getAllProducts(
   // Check if Supabase is configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("placeholder")) {
     return [];
   }
@@ -168,11 +168,11 @@ export async function getAllProducts(
     const supabase = useBuildClient
       ? getSupabaseBuildClient()
       : await getSupabaseServerClient();
-    
+
     if (!supabase) {
       return [];
     }
-    
+
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -181,7 +181,6 @@ export async function getAllProducts(
 
     if (error) {
       console.error("Error fetching products:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
       return [];
     }
 
@@ -214,18 +213,18 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   // Check if Supabase is configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("placeholder")) {
     return null;
   }
 
   try {
     const supabase = await getSupabaseServerClient();
-    
+
     if (!supabase) {
       return null;
     }
-    
+
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -235,7 +234,6 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
     if (error) {
       console.error("Error fetching product by slug:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
       return null;
     }
 
@@ -281,18 +279,18 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
   // Check if Supabase is configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("placeholder")) {
     return [];
   }
 
   try {
     const supabase = await getSupabaseServerClient();
-    
+
     if (!supabase) {
       return [];
     }
-    
+
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -302,7 +300,6 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
 
     if (error) {
       console.error("Error fetching latest products:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
       return [];
     }
 
@@ -349,6 +346,43 @@ export async function getCategoryCounts(): Promise<
       .sort((a, b) => b.total - a.total);
   } catch (error) {
     console.error("Error in getCategoryCounts:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetches products with discounts (currently returns products with lower prices)
+ * In a real implementation, you would check for a discount_price or discount_percentage field
+ */
+export async function getDiscountedProducts(
+  limit: number = 4
+): Promise<Product[]> {
+  try {
+    const allProducts = await getAllProducts();
+
+    // For now, we'll simulate discounts by selecting some products
+    // In a real app, you'd filter by discount_price or discount_percentage
+    // Return first few products as discounted products
+    return allProducts.slice(0, limit);
+  } catch (error) {
+    console.error("Error in getDiscountedProducts:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetches best-selling products (currently returns featured products)
+ * In a real implementation, you would order by sales_count or order_count
+ */
+export async function getBestSellingProducts(
+  limit: number = 4
+): Promise<Product[]> {
+  try {
+    // For now, return featured products as best-selling
+    // In a real app, you'd query by sales_count or order_count
+    return getFeaturedProducts(limit);
+  } catch (error) {
+    console.error("Error in getBestSellingProducts:", error);
     return [];
   }
 }

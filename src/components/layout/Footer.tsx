@@ -1,51 +1,104 @@
 import Link from "next/link";
+import { Phone, Mail, MapPin, Instagram, Send, Twitter } from "lucide-react";
 
 const quickLinks = [
   { href: "/", label: "خانه" },
-  { href: "/#categories", label: "دسته بندی ها" },
+  { href: "/#featured", label: "منتخب‌ها" },
+  { href: "/#new-products", label: "جدیدترین‌ها" },
   { href: "/cart", label: "سبد خرید" },
-  { href: "/checkout", label: "تکمیل سفارش" },
+];
+
+const customerService = [
+  { href: "/faq", label: "سوالات متداول" },
+  { href: "/shipping", label: "روش‌های ارسال" },
+  { href: "/return", label: "بازگشت کالا" },
+  { href: "/warranty", label: "گارانتی" },
 ];
 
 const supportLinks = [
-  { label: "پشتیبانی ۲۴/۷", value: "۰۲۱ ۰۰۰۰۰" },
-  { label: "ایمیل", value: "info@cargoplus.site" },
-  { label: "آدرس", value: "تهران، خیابان فناوری، ساختمان بازار نو" },
+  {
+    icon: Phone,
+    label: "پشتیبانی",
+    value: "021-41688250",
+    href: "tel:02141688250",
+  },
+  {
+    icon: Mail,
+    label: "ایمیل",
+    value: "info@cargoplus.ir",
+    href: "mailto:info@cargoplus.ir",
+  },
+  {
+    icon: MapPin,
+    label: "آدرس",
+    value: "تهران، میرداماد جنوبی",
+    href: "#",
+  },
+];
+
+const socialLinks = [
+  { icon: Instagram, label: "اینستاگرام", href: "#" },
+  { icon: Send, label: "تلگرام", href: "#" },
+  { icon: Twitter, label: "توییتر", href: "#" },
 ];
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-gradient-to-t from-neutral-100 via-white to-white">
-      <div className="absolute inset-0 -z-10 flex items-center justify-center">
-        <div className="h-[180px] w-[180px] rounded-full bg-gradient-to-br from-purple-200/40 via-blue-200/40 to-sky-200/40 blur-3xl" />
+    <footer className="relative overflow-hidden bg-gradient-to-t from-purple-50/40 via-white to-white border-t border-purple-100/50 mt-16">
+      {/* Background Decorations */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-gradient-to-br from-purple-200/20 via-purple-100/10 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-gradient-to-tr from-amber-200/20 via-amber-100/10 to-transparent blur-3xl" />
       </div>
 
-      <div className="w-full px-4 pt-10 pb-4 sm:px-6 lg:px-10">
-        <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_20px_60px_-30px_rgba(16,24,40,0.3)] backdrop-blur-xl">
-          <div className="absolute -top-20 right-12 h-40 w-40 rounded-full bg-gradient-to-tr from-rose-200/45 via-orange-200/40 to-amber-200/45 blur-3xl" />
-          <div className="absolute -bottom-20 left-10 h-44 w-44 rounded-full bg-gradient-to-tr from-cyan-200/45 via-teal-200/40 to-emerald-200/45 blur-3xl" />
-
-          <div className="relative grid gap-10 px-6 py-8 sm:px-8 lg:grid-cols-[1.5fr_1fr_1fr]">
-            <div className="space-y-6">
-              <h2 className="text-3xl font-black text-neutral-900">
-                بازار نو
-              </h2>
-              <p className="text-lg leading-8 text-neutral-600">
-                بازار نو تجربه ای مدرن از خرید آنلاین کالاهای دیجیتال، گجت های پوشیدنی و تجهیزات خانه هوشمند است. ما با ارسال سریع، ضمانت بازگشت و پشتیبانی تخصصی همراهتان هستیم.
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        {/* Main Footer Content */}
+        <div className="relative py-12 sm:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+            {/* Brand Section */}
+            <div className="lg:col-span-1 space-y-5">
+              <div className="flex flex-col gap-1">
+                <div className="relative inline-block">
+                  <h2 className="relative text-2xl font-black bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                    کارگو پلاس
+                  </h2>
+                </div>
+              </div>
+              <p className="text-sm leading-6 text-neutral-600">
+                تجربه‌ای مدرن و لوکس از خرید آنلاین کالاهای دیجیتال، گجت‌های
+                پوشیدنی و تجهیزات خانه هوشمند
               </p>
-              <div className="flex flex-wrap gap-3 text-sm text-neutral-500">
-                <span className="rounded-full bg-neutral-100 px-4 py-2">ارسال سریع به سراسر کشور</span>
-                <span className="rounded-full bg-neutral-100 px-4 py-2">۷ روز ضمانت بازگشت</span>
-                <span className="rounded-full bg-neutral-100 px-4 py-2">پشتیبانی همه روزه</span>
+
+              {/* Social Media */}
+              <div className="flex items-center gap-3 pt-2">
+                {socialLinks.map((social) => {
+                  const Icon = social.icon;
+                  return (
+                    <Link
+                      key={social.label}
+                      href={social.href}
+                      className="flex items-center justify-center size-10 rounded-xl bg-white border border-purple-100 text-purple-600 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all shadow-sm hover:shadow-md"
+                      aria-label={social.label}
+                    >
+                      <Icon className="size-5" />
+                    </Link>
+                  );
+                })}
               </div>
             </div>
 
-            <div>
-              <h3 className="text-lg font-semibold text-neutral-900">دسترسی سریع</h3>
-              <ul className="mt-6 space-y-4 text-base text-neutral-600">
+            {/* Quick Links */}
+            <div className="space-y-5">
+              <h3 className="text-base font-bold text-neutral-900">
+                دسترسی سریع
+              </h3>
+              <ul className="space-y-2.5">
                 {quickLinks.map((link) => (
                   <li key={link.href}>
-                    <Link className="transition hover:text-neutral-900" href={link.href}>
+                    <Link
+                      className="text-sm text-neutral-600 hover:text-purple-700 transition-colors inline-block hover:translate-x-[-4px] duration-200"
+                      href={link.href}
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -53,27 +106,87 @@ export function Footer() {
               </ul>
             </div>
 
-            <div>
-              <h3 className="text-lg font-semibold text-neutral-900">ارتباط با بازار نو</h3>
-              <ul className="mt-6 space-y-4 text-base text-neutral-600">
-                {supportLinks.map((item) => (
-                  <li key={item.label}>
-                    <p className="font-semibold text-neutral-800">{item.label}</p>
-                    <p className="text-neutral-600">{item.value}</p>
+            {/* Customer Service */}
+            <div className="space-y-5">
+              <h3 className="text-base font-bold text-neutral-900">
+                خدمات مشتریان
+              </h3>
+              <ul className="space-y-2.5">
+                {customerService.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      className="text-sm text-neutral-600 hover:text-purple-700 transition-colors inline-block hover:translate-x-[-4px] duration-200"
+                      href={link.href}
+                    >
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
 
-          <div className="relative border-t border-white/60 bg-white/70 px-6 py-5 text-sm text-neutral-500 shadow-[0_-12px_35px_-25px_rgba(16,24,40,0.45)] sm:flex sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} بازار نو. تمامی حقوق محفوظ است.</p>
-            <div className="flex items-center gap-4 text-neutral-500">
-              <Link href="/privacy" className="transition hover:text-neutral-800">
+            {/* Contact Info */}
+            <div className="space-y-5">
+              <h3 className="text-base font-bold text-neutral-900">
+                ارتباط با ما
+              </h3>
+              <ul className="space-y-4">
+                {supportLinks.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.label} className="flex items-start gap-3">
+                      <div className="flex items-center justify-center size-10 rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex-shrink-0">
+                        <Icon className="size-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-purple-700 mb-1">
+                          {item.label}
+                        </p>
+                        {item.href !== "#" ? (
+                          <Link
+                            href={item.href}
+                            className="text-sm text-neutral-600 hover:text-purple-700 transition-colors break-words"
+                          >
+                            {item.value}
+                          </Link>
+                        ) : (
+                          <p className="text-sm text-neutral-600 break-words">
+                            {item.value}
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="relative border-t border-purple-100/60 bg-white/50 backdrop-blur-sm py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+            <p className="text-neutral-600 font-medium text-center sm:text-right">
+              © {new Date().getFullYear()} کارگو پلاس. تمامی حقوق محفوظ است.
+            </p>
+            <div className="flex items-center gap-6 flex-wrap justify-center">
+              <Link
+                href="/privacy"
+                className="text-neutral-600 hover:text-purple-700 transition-colors font-medium"
+              >
                 حریم خصوصی
               </Link>
-              <Link href="/terms" className="transition hover:text-neutral-800">
+              <Link
+                href="/terms"
+                className="text-neutral-600 hover:text-purple-700 transition-colors font-medium"
+              >
                 شرایط استفاده
+              </Link>
+              <Link
+                href="/about"
+                className="text-neutral-600 hover:text-purple-700 transition-colors font-medium"
+              >
+                درباره ما
               </Link>
             </div>
           </div>

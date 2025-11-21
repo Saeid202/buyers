@@ -1,132 +1,135 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { CarouselApi } from "@/components/ui/carousel";
 
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+} from "@/components/ui/carousel";
 
 const rawSlides = [
   {
-    id: "smart-home",
+    id: "wholesale-connector",
+    title: "واسطه مستقیم ایران به چین",
+    description:
+      "ما شما را به بازار چین وصل می‌کنیم. محصولات، دلیوری و همه چیز با ماست. شما فقط به بیزینس خود برسید!",
+    gradient: "from-purple-600 via-purple-700 to-purple-800",
     image:
-      "https://treestone.com/wp-content/uploads/2017/01/shopify-banner.png",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80",
   },
   {
-    id: "wearables",
+    id: "china-market",
+    title: "دسترسی مستقیم به بازار چین",
+    description:
+      "کلی فروش هستیم و شما را از ایران به چین وصل می‌کنیم. قیمت‌های شفاف، دلیوری سریع و پشتیبانی کامل",
+    gradient: "from-amber-500 via-amber-600 to-amber-700",
     image:
-      "https://i.pinimg.com/originals/e3/56/4d/e3564db3fe0e206d9c4e866435e203c7.jpg",
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1920&q=80",
   },
 ];
 
 export function HeroSlider() {
   const slides = useMemo(() => rawSlides, []);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+
+    const updateCurrent = () => {
+      setCurrent(api.selectedScrollSnap());
+    };
+
+    // Set initial state
+    updateCurrent();
+
+    api.on("select", updateCurrent);
+
+    return () => {
+      api.off("select", updateCurrent);
+    };
+  }, [api]);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (!api) return;
+
+    const interval = setInterval(() => {
+      api.scrollNext();
+    }, 8000); // Change slide every 8 seconds
+
+    return () => clearInterval(interval);
+  }, [api]);
 
   return (
+    <section className="relative w-full overflow-hidden rounded-2xl" dir="ltr">
+      <Carousel
+        opts={{ align: "center", loop: true }}
+        className="w-full"
+        setApi={setApi}
+      >
+        <CarouselContent className="flex h-[28vh] sm:h-[32vh] lg:h-[36vh]">
+          {slides.map((slide, index) => (
+            <CarouselItem
+              key={slide.id}
+              className="min-w-full h-full relative group rounded-2xl overflow-hidden"
+            >
+              {/* Background Image with Overlay */}
+              <div className="absolute inset-0">
+                <Image
+                  src={slide.image}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority={index === 0}
+                  quality={85}
+                  unoptimized={false}
+                />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r ${slide.gradient} opacity-85`}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              </div>
 
-      <section className="relative w-full overflow-hidden" dir={'ltr'}>
-        <Carousel opts={{ align: "center", loop: true }} className="w-full">
-          <CarouselContent className="flex h-[80vh] sm:h-[90vh]">
-            {slides.map((slide, index) => (
-                <CarouselItem key={slide.id} className="min-w-full h-full relative">
-                  <Image
-                      src={slide.image}
-                      alt={slide.id}
-                      fill
-                      className="object-cover"
-                      sizes="100vw"
-                      priority={index === 0}
-                  />
-                </CarouselItem>
-            ))}
-          </CarouselContent>
+              {/* Content - Only Slogan Text */}
+              <div
+                className="relative z-10 h-full flex items-center justify-center px-4 sm:px-6 lg:px-8 select-none"
+                dir="rtl"
+              >
+                <div className="max-w-3xl mx-auto text-center text-white space-y-3 sm:space-y-4">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black leading-tight pointer-events-none text-right">
+                    {slide.title}
+                  </h1>
+                  <p className="text-sm sm:text-base text-white/90 max-w-xl mx-auto leading-relaxed pointer-events-none text-right">
+                    {slide.description}
+                  </p>
+                </div>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
 
-          <CarouselPrevious className="left-4 bg-white/60 text-neutral-800 hover:bg-white/80" />
-          <CarouselNext className="right-4 bg-white/60 text-neutral-800 hover:bg-white/80" />
-        </Carousel>
-
-      </section>
-  )
-    // <section className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-    //   <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/70 shadow-[0_25px_70px_-30px_rgba(16,24,40,0.45)] backdrop-blur-xl">
-    //     <div
-    //       className="flex transition-transform duration-700"
-    //       style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-    //     >
-    //       {slides.map((slide) => (
-    //         <article key={slide.id} className="relative flex min-w-full flex-col-reverse gap-6 p-8 sm:flex-row sm:items-center">
-    //           <div className="relative z-10 flex flex-1 flex-col gap-5 text-neutral-900">
-    //             <span className={`inline-flex w-fit items-center rounded-full bg-gradient-to-r ${slide.accent} px-4 py-1 text-xs font-semibold text-white backdrop-blur-md`}>
-    //               پیشنهاد ویژه بازار نو
-    //             </span>
-    //             <h2 className="text-3xl font-black leading-tight sm:text-4xl">{slide.title}</h2>
-    //             <p className="text-sm leading-7 text-neutral-600 sm:text-base">{slide.description}</p>
-    //             <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
-    //               <Link
-    //                 href={slide.href}
-    //                 className="rounded-2xl bg-neutral-900 px-6 py-3 text-white transition hover:bg-neutral-800"
-    //               >
-    //                 {slide.cta}
-    //               </Link>
-    //               <Link href="/cart" className="rounded-2xl border border-neutral-200 px-6 py-3 text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900">
-    //                 مشاهده سبد خرید
-    //               </Link>
-    //             </div>
-    //           </div>
-    //
-    //           <div className="relative flex flex-1 justify-center">
-    //             <div className="absolute inset-0 blur-3xl" />
-    //             <Image
-    //               src={slide.image}
-    //               alt={slide.title}
-    //               width={820}
-    //               height={520}
-    //               priority
-    //               className="relative h-64 w-full max-w-2xl rounded-3xl object-cover shadow-2xl"
-    //             />
-    //           </div>
-    //         </article>
-    //       ))}
-    //     </div>
-    //
-    //     <button
-    //       type="button"
-    //       aria-label="اسلاید قبلی"
-    //       onClick={() => goTo(activeIndex - 1)}
-    //       className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/80 p-2 text-neutral-700 shadow-lg transition hover:bg-white"
-    //     >
-    //       <ChevronRight className="size-5" />
-    //     </button>
-    //     <button
-    //       type="button"
-    //       aria-label="اسلاید بعدی"
-    //       onClick={() => goTo(activeIndex + 1)}
-    //       className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-white/70.bg-white/80 p-2 text-neutral-700 shadow-lg transition hover:bg-white"
-    //     >
-    //       <ChevronLeft className="size-5" />
-    //     </button>
-    //
-    //     <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
-    //       {slides.map((slide, index) => (
-    //         <button
-    //           key={slide.id}
-    //           type="button"
-    //           onClick={() => goTo(index)}
-    //           aria-label={`مشاهده اسلاید ${index + 1}`}
-    //           className={`h-2 rounded-full transition-all ${
-    //             activeIndex === index ? "w-8 bg-neutral-900" : "w-2 bg-neutral-300"
-    //           }`}
-    //         />
-    {/*      ))}*/}
-    {/*    </div>*/}
-    {/*  </div>*/}
-    {/*</section>*/}
-  // );
+        {/* Slide Indicators Only */}
+        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => api?.scrollTo(index)}
+              className={`h-2 rounded-full transition-all cursor-pointer ${
+                current === index
+                  ? "w-8 bg-white shadow-md"
+                  : "w-2 bg-white/50 hover:bg-white/75"
+              }`}
+              aria-label={`مشاهده اسلاید ${index + 1}`}
+            />
+          ))}
+        </div>
+      </Carousel>
+    </section>
+  );
 }

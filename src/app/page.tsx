@@ -1,21 +1,26 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
+import { Suspense } from "react";
 import type { Product } from "@/data/products";
-import { ProductCard } from "@/components/product/ProductCard";
-import { PriceTag } from "@/components/common/PriceTag";
 import { HeroSlider } from "@/components/home/HeroSlider";
-import {Features} from "@/components/home/Features";
-import { 
-  getFeaturedProducts, 
-  getLatestProducts, 
-  getAllProducts 
+import { Features } from "@/components/home/Features";
+import { ProductsSection } from "@/components/home/ProductsSection";
+import { Categories } from "@/components/home/Categories";
+import { DiscountedProductsSidebar } from "@/components/home/DiscountedProductsSidebar";
+import { CurrencyPricesSidebar } from "@/components/home/CurrencyPricesSidebar";
+import { PortPricesTicker } from "@/components/home/PortPricesTicker";
+import { BestSellingProducts } from "@/components/home/BestSellingProducts";
+import {
+  getFeaturedProducts,
+  getLatestProducts,
+  getAllProducts,
+  getDiscountedProducts,
+  getBestSellingProducts,
 } from "@/lib/products";
 
 export const metadata: Metadata = {
-  title: "خانه | بازار نو",
+  title: "خانه | CargoPlus",
   description:
-    "بازار نو فروشگاه آنلاین محصولات دیجیتال، گجت و لوازم خانه هوشمند به زبان فارسی با ارسال سریع و پشتیبانی اختصاصی است.",
+    "CargoPlus (کارگو پلاس) - واسطه مستقیم ایران به چین. ما شما را به بازار چین وصل می‌کنیم. محصولات، دلیوری و همه چیز با ماست. قیمت‌های شفاف و پشتیبانی کامل.",
 };
 
 export default async function Home() {
@@ -23,7 +28,7 @@ export default async function Home() {
     source: Product[],
     required: number,
     fallback: Product[],
-    exclude: string[] = [],
+    exclude: string[] = []
   ) => {
     const result: Product[] = [];
     const seen = new Set(exclude);
@@ -51,89 +56,88 @@ export default async function Home() {
   let featuredBase: Product[] = [];
   let allProducts: Product[] = [];
   let latestProducts: Product[] = [];
+  let discountedProducts: Product[] = [];
+  let bestSellingProducts: Product[] = [];
 
   try {
-    [featuredBase, allProducts, latestProducts] = await Promise.all([
+    [
+      featuredBase,
+      allProducts,
+      latestProducts,
+      discountedProducts,
+      bestSellingProducts,
+    ] = await Promise.all([
       getFeaturedProducts(6),
       getAllProducts(),
       getLatestProducts(5),
+      getDiscountedProducts(6),
+      getBestSellingProducts(8),
     ]);
   } catch (error) {
     console.error("Error fetching products:", error);
     // Continue with empty arrays if there's an error
   }
 
-  const spotlightProduct = featuredBase[0] ?? allProducts[0] ?? null;
-
-  const quickBuyProducts = ensureUnique(
-    spotlightProduct ? featuredBase.filter((item) => item.id !== spotlightProduct.id) : featuredBase,
-    4,
-    allProducts,
-    spotlightProduct ? [spotlightProduct.id] : [],
-  );
-
   const featuredGridProducts = ensureUnique(featuredBase, 5, allProducts);
   const newArrivalProducts = ensureUnique(latestProducts, 5, allProducts);
 
   return (
-    <div className="bg-neutral-50">
-      <HeroSlider />
+    <div className="bg-gradient-to-b from-white via-purple-50/20 to-white">
+      {/* Port Prices Ticker at Top */}
+      <PortPricesTicker />
 
-      <Features/>
-
-      <section id="quick-buy" className="bg-white py-16">
-        <div className="mx-auto container px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-2xl font-bold text-neutral-900">خرید سریع</h2>
-            <Link href="/cart" className="text-sm text-neutral-600 hover:text-neutral-900">
-              لیست تمام محصولات
-            </Link>
+      {/* Hero Section with Sidebars */}
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
+          {/* Left Sidebar - Currency Prices */}
+          <div className="hidden lg:flex lg:col-span-3 flex-col">
+            <CurrencyPricesSidebar />
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-            {featuredGridProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="featured" className="bg-white py-16">
-        <div className="mx-auto container px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-2xl font-bold text-neutral-900">منتخب های بازار نو</h2>
-            <Link href="/cart" className="text-sm text-neutral-600 hover:text-neutral-900">
-              لیست تمام محصولات
-            </Link>
+          {/* Center - Hero Slider */}
+          <div className="lg:col-span-6 flex flex-col">
+            <Suspense
+              fallback={
+                <div className="relative w-full h-[28vh] sm:h-[32vh] lg:h-[36vh] bg-gradient-to-br from-purple-100 to-amber-100 animate-pulse rounded-2xl" />
+              }
+            >
+              <HeroSlider />
+            </Suspense>
+            <BestSellingProducts products={bestSellingProducts} />
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-            {featuredGridProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          {/* Right Sidebar - Discounted Products */}
+          <div className="lg:col-span-3 flex flex-col">
+            <DiscountedProductsSidebar products={discountedProducts} />
           </div>
         </div>
       </section>
 
-      <section id="new-products" className="mx-auto container px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-neutral-900">جدیدترین محصولات</h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              کالاهایی که همین امروز به فروشگاه اضافه شده اند
-            </p>
-          </div>
-          <Link href="/cart" className="text-sm text-neutral-600 hover:text-neutral-900">
-            لیست تمامی محصولات
-          </Link>
-        </div>
+      <Categories />
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-          {newArrivalProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
+      <Features />
+
+      <div className="bg-gradient-to-b from-white to-purple-50/30">
+        <ProductsSection
+          id="featured"
+          title="منتخب‌ها"
+          subtitle="بهترین محصولات با بهترین قیمت"
+          products={featuredGridProducts}
+          icon={
+            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+          }
+        />
+      </div>
+
+      <ProductsSection
+        id="new-products"
+        title="جدیدترین‌ها"
+        subtitle="کالاهایی که همین امروز به فروشگاه اضافه شده‌اند"
+        products={newArrivalProducts}
+        icon={
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+        }
+      />
     </div>
   );
 }

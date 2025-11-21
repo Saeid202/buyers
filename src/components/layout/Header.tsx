@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Search, User, LogOut } from "lucide-react";
+import { ShoppingBag, Search, User, LogOut, Menu, X } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseAuth } from "@/providers/SupabaseAuthProvider";
 
@@ -12,22 +12,26 @@ function useIsMounted() {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    setTimeout(() => {
+      setIsMounted(true);
+    }, 0);
   }, []);
 
   return isMounted;
 }
 
 const navItems = [
-  { href: "/#categories", label: "دسته بندی کالاها" },
+  { href: "/#featured", label: "منتخب‌ها" },
+  { href: "/#new-products", label: "جدیدترین‌ها" },
   { href: "/checkout", label: "ثبت سفارش" },
 ];
 
 export function Header() {
   const { totalItems } = useCart();
   const { user, loading, signOut, refresh } = useSupabaseAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const isMounted = useIsMounted();
 
@@ -40,163 +44,251 @@ export function Header() {
     return user.email?.split("@")[0] ?? "کاربر بازار نو";
   }, [user]);
 
-  const profileInitial = useMemo(() => {
-    if (!profileName) {
-      return user?.email?.charAt(0)?.toUpperCase() ?? "کاربر".charAt(0);
-    }
-    return profileName.trim().charAt(0).toUpperCase();
-  }, [profileName, user?.email]);
-
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!userMenuOpen) return;
     const handleClick = (event: MouseEvent) => {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
+      if (!userMenuRef.current) return;
+      if (!userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [menuOpen]);
+  }, [userMenuOpen]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   const handleSignOut = async () => {
     await signOut();
     await refresh();
-    setMenuOpen(false);
+    setUserMenuOpen(false);
     router.refresh();
   };
 
   return (
-    <header className="sticky top-0 z-50">
-      <div className="relative px-4 py-3 sm:px-6 lg:px-10">
-        <div className="absolute inset-0 -z-20 overflow-hidden rounded-3xl border border-white/60 bg-gradient-to-r from-white/90 via-white/75 to-white/90 shadow-[0_15px_45px_-20px_rgba(20,20,20,0.5)] backdrop-blur-xl">
-          <div className="absolute -top-24 right-8 h-56 w-56 rounded-full bg-gradient-to-br from-rose-200/60 via-purple-200/40 to-blue-200/60 blur-3xl" />
-          <div className="absolute -bottom-28 left-0 h-60 w-60 rounded-full bg-gradient-to-br from-sky-200/50 via-teal-200/40 to-emerald-200/50 blur-3xl" />
-          <div className="absolute -bottom-8 right-1/3 h-24 w-24 rounded-full border border-white/40 bg-white/40 backdrop-blur-xl" />
-        </div>
+    <>
+      <header className="sticky top-0 z-50 border-b border-purple-100/50 bg-white/95 backdrop-blur-md shadow-sm">
+        <div className="container mx-auto px-4 py-3 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="relative flex items-center justify-between gap-4">
+            {/* Action Buttons - Desktop: Cart + Profile, Mobile: Profile + Menu */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Cart - Desktop Only */}
+              <Link
+                href="/cart"
+                className="hidden lg:flex relative items-center gap-2 rounded-xl border border-purple-200/60 bg-white px-3 py-2.5 text-purple-700 shadow-sm transition-all hover:border-purple-400 hover:bg-purple-50 hover:shadow-md"
+                aria-label="سبد خرید"
+              >
+                <ShoppingBag className="size-5" aria-hidden />
+                <span className="text-sm font-medium">سبد خرید</span>
+                {isMounted && totalItems > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-xs font-bold text-white shadow-sm"
+                    suppressHydrationWarning
+                  >
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
 
+              {/* User Profile - Always Visible */}
+              {loading ? (
+                <div className="h-10 w-10 animate-pulse rounded-xl bg-purple-100" />
+              ) : user ? (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserMenuOpen((prev) => !prev)}
+                    className="flex items-center gap-2 rounded-xl border border-purple-200/60 bg-white px-3 py-2.5 text-purple-700 shadow-sm transition-all hover:border-purple-400 hover:bg-purple-50 hover:shadow-md"
+                    aria-label="حساب کاربری"
+                  >
+                    <User className="size-5" aria-hidden />
+                    <span className="text-sm font-medium">پروفایل</span>
+                  </button>
 
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-12 z-50 w-56 flex flex-col gap-1 rounded-xl border border-purple-100 bg-white p-2 text-sm shadow-xl backdrop-blur-sm">
+                      <div className="px-3 py-2 text-xs text-purple-600 font-medium border-b border-purple-100">
+                        خوش آمدید {profileName}
+                      </div>
+                      <Link
+                        href="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="rounded-lg px-3 py-2 text-neutral-700 transition-all hover:bg-purple-50 hover:text-purple-700"
+                      >
+                        پروفایل من
+                      </Link>
+                      <Link
+                        href="/#featured"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="rounded-lg px-3 py-2 text-neutral-700 transition-all hover:bg-purple-50 hover:text-purple-700"
+                      >
+                        سفارش‌های من
+                      </Link>
+                      <div className="border-t border-purple-100 my-1" />
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-red-600 transition-all hover:bg-red-50"
+                      >
+                        خروج از حساب
+                        <LogOut className="size-4" aria-hidden />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center gap-2 rounded-xl border border-purple-200/60 bg-gradient-to-r from-purple-600 to-purple-700 px-3 py-2.5 text-white shadow-sm transition-all hover:from-purple-700 hover:to-purple-800 hover:shadow-md"
+                  aria-label="ورود | ثبت نام"
+                >
+                  <User className="size-5" aria-hidden />
+                  <span className="text-sm font-medium">پروفایل</span>
+                </Link>
+              )}
 
-        <div className="relative mx-auto flex max-w-7xl flex-wrap items-center gap-3">
+              {/* Mobile Menu Toggle */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                className="lg:hidden flex items-center justify-center rounded-xl border border-purple-200/60 bg-white p-2.5 text-purple-700 shadow-sm transition-all hover:border-purple-400 hover:bg-purple-50"
+                aria-label="منو"
+              >
+                {mobileMenuOpen ? (
+                  <X className="size-5" aria-hidden />
+                ) : (
+                  <Menu className="size-5" aria-hidden />
+                )}
+              </button>
+            </div>
 
-          <div className={"flex justify-between w-full"}>
-            <Link href="/" className="flex items-center gap-3 text-neutral-900">
-              <span className="text-2xl font-black">بازار نو</span>
-            </Link>
-
+            {/* Search Bar - Desktop Only */}
             <form
-                action="/search"
-                className="group order-last flex w-1/2 items-center gap-3 rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm text-neutral-600 shadow-sm transition focus-within:border-neutral-900 focus-within:bg-white focus-within:text-neutral-900 sm:order-none"
+              action="/search"
+              className="hidden lg:flex flex-1 max-w-2xl items-center gap-3 rounded-xl border border-purple-200/60 bg-white px-4 py-2.5 text-sm text-neutral-600 shadow-sm transition-all focus-within:border-purple-500 focus-within:shadow-md focus-within:shadow-purple-100"
             >
-              <Search className="size-4 text-neutral-400 group-focus-within:text-neutral-900" aria-hidden />
+              <Search
+                className="size-5 text-purple-400 group-focus-within:text-purple-600 transition-colors flex-shrink-0"
+                aria-hidden
+              />
               <input
-                  id="search-header"
-                  name="q"
-                  placeholder="جستجوی کالا"
-                  className=" bg-transparent text-neutral-700 outline-none placeholder:text-neutral-500"
-                  autoComplete="off"
+                id="search-header"
+                name="q"
+                placeholder="جستجوی محصولات..."
+                className="flex-1 bg-transparent text-neutral-700 outline-none placeholder:text-neutral-400"
+                autoComplete="off"
               />
             </form>
 
-            <div className="flex items-center gap-2">
-              {loading ? (
-                  <div className="hidden h-10 w-24 animate-pulse rounded-2xl bg-white/60 sm:block" />
-              ) : user ? (
-                  <div className="relative hidden sm:block" ref={menuRef}>
-                    <button
-                        type="button"
-                        onClick={() => setMenuOpen((prev) => !prev)}
-                        className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/70 px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:border-neutral-900 hover:text-neutral-900"
-                    >
-                  <span className="flex size-8 items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white">
-                    {profileInitial}
-                  </span>
-                      <span className="max-w-[120px] truncate text-right">{profileName}</span>
-                    </button>
-
-                    {menuOpen ? (
-                        <div className="absolute left-0 right-0 top-12 z-50 flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-4 text-sm shadow-xl">
-                          <div className="text-xs text-neutral-500">با حساب کاربری بازار نو خوش آمدید</div>
-                          <Link
-                              href="/profile"
-                              onClick={() => setMenuOpen(false)}
-                              className="rounded-xl border border-neutral-200 px-3 py-2 text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900"
-                          >
-                            پروفایل من
-                          </Link>
-                          <button
-                              type="button"
-                              onClick={handleSignOut}
-                              className="flex items-center justify-between gap-2 rounded-xl border border-neutral-200 px-3 py-2 text-neutral-500 transition hover:border-rose-500 hover:text-rose-500"
-                          >
-                            خروج از حساب
-                            <LogOut className="size-4" aria-hidden />
-                          </button>
-                        </div>
-                    ) : null}
-                  </div>
-              ) : (
-                  <Link
-                      href="/login"
-                      className="hidden items-center gap-2 rounded-2xl border border-white/70 bg-white/70 px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:border-neutral-900 hover:text-neutral-900 sm:flex"
-                  >
-                    <User className="size-4" aria-hidden />
-                    <span>ورود | ثبت نام</span>
-                  </Link>
-              )}
-
-              <Link
-                  href="/cart"
-                  className="relative flex items-center gap-2 rounded-2xl border border-white/70 bg-white/70 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:border-neutral-900 hover:text-neutral-900"
-              >
-                <ShoppingBag className="size-4" aria-hidden />
-                <span className="hidden sm:inline">سبد خرید</span>
-                <span 
-                  className={`flex size-5 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white ${!isMounted || totalItems === 0 ? 'hidden' : ''}`}
-                  suppressHydrationWarning
-                >
-                  {isMounted ? totalItems : 0}
+            {/* Logo */}
+            <Link
+              href="/"
+              className="flex items-center gap-2 group flex-shrink-0"
+            >
+              <div className="relative">
+                <span className="relative text-2xl sm:text-2xl font-black bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 bg-clip-text text-transparent">
+                  کارگو پلاس
                 </span>
-              </Link>
-            </div>
+              </div>
+            </Link>
           </div>
 
+          {/* Navigation Menu - Desktop */}
+          <div className="hidden lg:flex items-center gap-1 mt-3 pt-3 border-t border-purple-100/50">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm text-neutral-600 font-medium transition-all hover:bg-purple-50 hover:text-purple-700"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </header>
 
-          <div className="flex w-full items-center gap-3 pt-2">
-            <div className="hidden flex-1 items-center gap-4 overflow-x-auto text-sm text-neutral-600 lg:flex">
+      {/* Mobile Menu - Simple and Visible - Outside header for proper z-index */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 bg-white z-[99999] overflow-y-auto">
+          {/* Header in Mobile Menu */}
+          <div className="sticky top-0 bg-white border-b border-purple-100 p-4 flex items-center justify-between z-10 shadow-sm">
+            <span className="text-xl font-black text-purple-700">
+              کارگو پلاس
+            </span>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 rounded-lg hover:bg-purple-50 transition-colors"
+              aria-label="بستن منو"
+            >
+              <X className="size-6 text-purple-700" />
+            </button>
+          </div>
+
+          {/* Menu Content */}
+          <div className="p-4 space-y-4">
+            {/* Search */}
+            <form action="/search" className="w-full">
+              <div className="flex items-center gap-3 rounded-xl border-2 border-purple-200 bg-white px-4 py-3 shadow-sm">
+                <Search className="size-5 text-purple-600" />
+                <input
+                  name="q"
+                  placeholder="جستجوی محصولات..."
+                  className="flex-1 bg-transparent text-neutral-700 outline-none placeholder:text-neutral-400"
+                  autoComplete="off"
+                />
+              </div>
+            </form>
+
+            {/* Cart */}
+            <Link
+              href="/cart"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between gap-3 rounded-xl border-2 border-purple-200 bg-purple-50 px-4 py-4 hover:bg-purple-100 transition-colors shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingBag className="size-6 text-purple-700" />
+                <span className="text-lg font-bold text-purple-700">
+                  سبد خرید
+                </span>
+              </div>
+              {isMounted && totalItems > 0 && (
+                <span className="flex size-7 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white shadow-sm">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
+            {/* Navigation Links */}
+            <div className="space-y-2 pt-4">
+              <div className="px-2 text-sm font-bold text-purple-600 mb-2">
+                منوی اصلی
+              </div>
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="whitespace-nowrap rounded-xl px-3 py-2 text-neutral-600 transition hover:bg-white/80 hover:text-neutral-900"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block rounded-xl bg-purple-50 px-4 py-4 text-base font-semibold text-purple-700 hover:bg-purple-100 transition-colors shadow-sm"
                 >
                   {item.label}
                 </Link>
               ))}
-            </div>
-
-            <div className="flex w-full items-center gap-2 overflow-x-auto text-sm text-neutral-600 lg:hidden">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="whitespace-nowrap rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-neutral-600 transition hover:border-neutral-900 hover:text-neutral-900"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              {!loading && user ? (
-                <Link
-                  href="/profile"
-                  className="whitespace-nowrap rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-neutral-600 transition hover:border-neutral-900 hover:text-neutral-900"
-                >
-                  حساب کاربری
-                </Link>
-              ) : null}
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      )}
+    </>
   );
 }

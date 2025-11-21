@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
 import { useState, useTransition } from "react";
+import { Loader2, Check } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice } from "@/lib/formatPrice";
 
@@ -16,7 +17,10 @@ type AddToCartButtonProps = {
   quantity?: number;
 };
 
-export function AddToCartButton({ product, quantity = 1 }: AddToCartButtonProps) {
+export function AddToCartButton({
+  product,
+  quantity = 1,
+}: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [isPending, startTransition] = useTransition();
   const [isAdded, setIsAdded] = useState(false);
@@ -39,10 +43,22 @@ export function AddToCartButton({ product, quantity = 1 }: AddToCartButtonProps)
     <button
       type="button"
       onClick={handleClick}
-      disabled={isPending}
-      className="w-full rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
+      disabled={isPending || isAdded}
+      className="group relative w-full h-11 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-6 text-sm font-semibold text-white shadow-md hover:from-purple-700 hover:to-purple-800 hover:shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:shadow-md flex items-center justify-center gap-2"
     >
-      {isAdded ? "به سبد اضافه شد" : `افزودن به سبد (${formatPrice(product.price, product.currency)})`}
+      {isPending ? (
+        <>
+          <Loader2 className="size-4 animate-spin" />
+          <span>در حال افزودن...</span>
+        </>
+      ) : isAdded ? (
+        <>
+          <Check className="size-4" />
+          <span>به سبد اضافه شد</span>
+        </>
+      ) : (
+        <span>افزودن به سبد خرید</span>
+      )}
     </button>
   );
 }

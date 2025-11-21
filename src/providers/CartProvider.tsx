@@ -118,7 +118,6 @@ function loadInitialState(): CartState {
         })),
     };
   } catch (error) {
-    console.error("Failed to load cart from storage", error);
     return { items: [] };
   }
 }
